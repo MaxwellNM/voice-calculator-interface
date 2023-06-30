@@ -1,26 +1,28 @@
 from flask import Flask
-from flask import Flask, render_template #, request, url_for, flash, redirect
-import gradio as gr
+from flask import Flask, render_template, request #, url_for, flash, redirect
 from controler import Vci
 import os
+import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
-def record_audio(duration):
-  # Create a temporary file to store the audio recording.
-  file_name = os.path.join(app.config["UPLOAD_FOLDER"], "recording.wav")
+vcInterface  =  Vci.Vci()
 
-  # Start recording audio.
-  with open(file_name, "wb") as f:
-    f.write(gr.audio(duration))
+# Load the Openai/whisper_medium Transformer Model
+vcInterface.loadTransformer()
 
-  # Return the path to the audio file.
-  return file_name
-
-@app.route("/")
+@app.route("/", methods=['POST', 'GET'])
 def index():
-  demo = gr.Interface(fn=record_audio, inputs="number", outputs="file")
-  return demo.launch()
+  filePrefix = "recording_"+time.strftime("%Y%m%d-%H%M%S")
+  file_name = os.path.join(app.config["UPLOAD_FOLDER"], filePrefix+".wav")
+  f = open(file_name, 'wb')
+  f.write(request.get_data("audio_data"))
+  f.close()
+  if os.path.isfile(file_name):
+    print(file_name+ " exists")
+    return render_template('index.html', request="POST")   
+  else:
+    return render_template("index.html")
 
 if __name__ == "__main__":
   # Set the media folder to the current directory.

@@ -4,7 +4,7 @@ import transformers
 from transformers import pipeline
 
 
-class Vci:
+class Vci():
     def __init__(self) -> None:
         self.ops = {}
         self.atomExpression = None 
@@ -21,28 +21,68 @@ class Vci:
     def filterExpression(self, expresssion):
         pass
 
-    def parseExpression(self, expresssion):
-        pass
+    def numberExtraction(self, expresssion):
+        # Split the text into words.
+        words = expresssion.split()
+        status = 0
 
-    def voice2Text(self, audio):
+        numberValue = 0
+        for word in words:
+            val = 0
+            if word in self.alphabetExpression["unit"].keys():
+                val = int(self.alphabetExpression["unit"][word])
+
+            elif word in self.alphabetExpression["tense"].keys():
+                val = int(self.alphabetExpression["tense"][word])
+
+            elif word in self.alphabetExpression["others"].keys():
+                val = numberValue*int(self.alphabetExpression["unit"][word])
+            else:
+                val = None
+                
+            numberValue += val
+
+        return numberValue
+
+    def voiceToText(self, audio):
         text = self.transformerModel(audio)
-        return text.text
+        return text["text"]
     
-    def text2Expression(self, textExpression):
-        """Reads a text arithmetic expression and returns its arithmetic expression."""
+    def textToExpression(self, textExpression):
+        """ Reads a text  expression from transformer output and 
+           returns its arithmetic expression and the status of current operation.
+        """
+
+        arithmetic_expression = ""
         # Split the text into words.
         words = textExpression.split()
+        status = 0
+
+        # Find the operators in the text representation of math expression.
+        index_operators = [i for i in range(len(words)) if words[i] in self.alphabetExpression["operators"].keys()]
+
+        if len(index_operators) == 0:
+            # Execption Level 1
+            status = 1
+            print("No operation symbol found from the Voice")
+            return ["", 1]
         
-        # Find the words that represent the numbers.
-        numbers = [word for word in words if word.isdigit()]
+        # Find number 
+        pos = 0
+        for i in range(len(index_operators)):
+            subtextToNumber = words[pos:i] 
+            # Find the words that represent the numbers.
+            val = self.numberExtraction(subtextToNumber)
+            if val == None:
+                # Execption Level 2
+                status = 2
+                print("No number symbol found from the Voice")
+                return ["", 2]    
+            arithmetic_expression= arithmetic_expression + str(val)+" "+words[index_operators[i]]  
+            pos = i         
 
-        # Find the words that represent the operators.
-        operators = [word for word in words if word not in numbers]
-
-        # Create the arithmetic expression.
-        arithmetic_expression = " ".join([numbers[0]] + operators + numbers[1:])
-
-        return arithmetic_expression
+        # Return the arithmetic expression
+        return [arithmetic_expression, 3]
     
 
         
