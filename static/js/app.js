@@ -121,6 +121,8 @@ function createDownloadLink(blob) {
     var au = document.createElement('audio');
     var li = document.createElement('li');
     var link = document.createElement('a');
+    var buttonVCI = document.createElement('a');
+    var LabelResultVCI = document.createElement('h3');
 
     //name of .wav file to use during upload and download (without extendion)
     var filename = new Date().toISOString();
@@ -133,6 +135,7 @@ function createDownloadLink(blob) {
     link.href = url;
     link.download = filename+".wav"; //download forces the browser to donwload the file using the  filename
     link.innerHTML = "Save to disk";
+    buttonVCI.innerHTML = "Compute the Math Expression";
 
     //add the new audio element to li
     li.appendChild(au);
@@ -144,7 +147,7 @@ function createDownloadLink(blob) {
     li.appendChild(link);
 
     //upload link
-    var upload = document.createElement('a');
+    /*var upload = document.createElement('a');
     upload.href="#";
     upload.innerHTML = "Upload";
     upload.addEventListener("click", function(event){
@@ -158,10 +161,25 @@ function createDownloadLink(blob) {
           fd.append("audio_data",blob, filename);
           xhr.open("POST","/",true);
           xhr.send(fd);
-    })
-    li.appendChild(document.createTextNode (" "))//add a space in between
-    li.appendChild(upload)//add the upload link to li
-
+    })*/
+    
+    // Call the Vci controller in server to proceed
+    buttonVCI.href="#";
+    buttonVCI.addEventListener("click", function(event){
+        var xhr=new XMLHttpRequest();
+        xhr.onload=function(e) {
+            if(this.readyState === 4) {
+                console.log("Server returned: ",e.target.responseText);
+            }
+        };
+        var fd=new FormData();
+        fd.append("speech_data",blob, filename);
+        xhr.open("POST","/",true);
+        xhr.send(fd);
+  })
+  li.appendChild(document.createTextNode (" "))//add a space in between
+  //li.appendChild(upload)//add the upload link to li
+  li.appendChild(buttonVCI)//add the upload link to li
     //add the li element to the ol
     //recordingsList.appendChild(li);
 }

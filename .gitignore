@@ -1,4 +1,6 @@
 .DS_Store
 controler/__pycache__
 .pyc
+media/*
+flagged
 
